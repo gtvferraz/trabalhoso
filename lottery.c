@@ -55,8 +55,10 @@ Process* lottSchedule(Process *plist) {
 	total_tickets = 0;
 	p = plist;
 	while(p != NULL) {
-		params = processGetSchedParams(p);
-		total_tickets += params->num_tickets;
+		if(processGetStatus(p) == 4 || processGetStatus(p) == 8) {
+			params = processGetSchedParams(p);
+			total_tickets += params->num_tickets;
+		}
 		p = processGetNext(p);
 	}
 
@@ -66,21 +68,12 @@ Process* lottSchedule(Process *plist) {
 	p = plist;
 	while(p != NULL) {
 		params = processGetSchedParams(p);
-		sum += params->num_tickets;
+		if(processGetStatus(p) == 4 || processGetStatus(p) == 8) {
+			sum += params->num_tickets;
 
-		if(random <= sum) {
-			if(processGetStatus(p) != 2)
-				return p;
-			else {
-				p = processGetNext(p);
-				if(p == NULL)
-					p = plist;
-				while(p != NULL) {
-					if(processGetStatus(p) != 2)
-						return p;
-					p = processGetNext(p);
-				}
-			}	
+			if(random < sum) {
+				return p;	
+			}
 		}
 
 		p = processGetNext(p);
@@ -104,9 +97,9 @@ int lottTransferTickets(Process *src, Process *dst, int tickets) {
 	LotterySchedParams* params_dst = processGetSchedParams(dst);
 
 	if(params_src->num_tickets <= tickets) {
-		tickets = params_src->num_tickets;
-		params_dst->num_tickets += params_src->num_tickets;
-		params_src->num_tickets = 0; //PROCESSO NUNCA VAI SER SELECIONADO, ACHO MELHOR REVER ISSO DEPOIS
+		tickets = params_src->num_tickets-1;
+		params_dst->num_tickets += params_src->num_tickets-1;
+		params_src->num_tickets = 1; //PROCESSO QUASE NUNCA VAI SER SELECIONADO, ACHO MELHOR REVER ISSO DEPOIS
 		return tickets;
 	}
 
